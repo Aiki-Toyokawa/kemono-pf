@@ -8,6 +8,7 @@
     "build:backend": "pnpm --filter backend build",
     "build:frontend": "pnpm --filter frontend build",
     "db:migrate": "pnpm --filter backend prisma migrate dev",
+    "db:deploy": "pnpm --filter backend db:deploy",
     "db:generate": "pnpm --filter backend prisma generate",
     "db:studio": "pnpm --filter backend prisma studio",
     "lint": "pnpm --filter backend lint && pnpm --filter frontend lint",

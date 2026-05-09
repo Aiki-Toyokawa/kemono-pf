@@ -1,6 +1,18 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
+
+function parseRedisUrl(url: string) {
+  const parsed = new URL(url);
+  if (parsed.protocol !== 'rediss:') return url;
+  // Upstash (and other TLS Redis providers) use rediss:// scheme
+  return {
+    host: parsed.hostname,
+    port: parseInt(parsed.port) || 6380,
+    password: parsed.password || undefined,
+    tls: {},
+  };
+}
 import { PrismaModule } from './prisma/prisma.module';
 import { StorageModule } from './storage/storage.module';
 import { AuthModule } from './auth/auth.module';
@@ -13,7 +25,7 @@ import { AdminModule } from './admin/admin.module';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     BullModule.forRoot({
-      redis: process.env.REDIS_URL ?? 'redis://localhost:6379',
+      redis: parseRedisUrl(process.env.REDIS_URL ?? 'redis://localhost:6379'),
     }),
     PrismaModule,
     StorageModule,
