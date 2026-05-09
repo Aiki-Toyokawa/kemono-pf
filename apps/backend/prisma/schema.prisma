@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Users
+// ─────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  passwordHash  String
+  role          Role     @default(USER)
+  displayName   String
+  bio           String?
+  avatarUrl     String?
+  isNsfwEnabled Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  products      Product[]
+  orders        Order[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ARTIST
+  ADMIN
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// Products
+// ─────────────────────────────────────────────
+
+model Product {
+  id          String        @id @default(cuid())
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  title       String
+  description String?
+  price       Int           // 円単位 (0 = 無料)
+  isNsfw      Boolean       @default(false)
+  status      ProductStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  files       ProductFile[]
+  tags        ProductTag[]
+  orders      Order[]
+
+  @@index([authorId])
+  @@index([status])
+  @@map("products")
+}
+
+enum ProductStatus {
+  PENDING    // アップロード処理中
+  READY      // 処理完了・非公開
+  PUBLISHED  // 公開中
+  REJECTED   // 管理者により非承認
+}
+
+model ProductFile {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  filename    String
+  mimeType    String
+  sizeBytes   BigInt
+  r2Key       String   // R2上のオブジェクトキー (products/{productId}/original/{filename})
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_files")
+}
+
+// ─────────────────────────────────────────────
+// Tags
+// ─────────────────────────────────────────────
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  isNsfw   Boolean      @default(false)
+  products ProductTag[]
+
+  @@map("tags")
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+  @@map("product_tags")
+}
+
+// ─────────────────────────────────────────────
+// Orders & Downloads
+// ─────────────────────────────────────────────
+
+model Order {
+  id                    String      @id @default(cuid())
+  buyerId               String
+  buyer                 User        @relation(fields: [buyerId], references: [id])
+  productId             String
+  product               Product     @relation(fields: [productId], references: [id])
+  amount                Int         // 円単位
+  status                OrderStatus @default(PENDING)
+  stripeSessionId       String?     @unique
+  stripePaymentIntentId String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  download Download?
+
+  @@index([buyerId])
+  @@index([productId])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING   // Checkout前
+  PAID      // 決済完了
+  CANCELLED
+  REFUNDED
+}
+
+model Download {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("downloads")
+}

@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.next/
+.env
+.env.local
+*.env
+!*.env.example
+
+# Build info
+*.tsbuildinfo
+
+# Husky
+.husky/_
+
+# Local only
+CLAUDE.local.md
+.claude/
+メモ.md
+
+# OS
+.DS_Store
+Thumbs.db
