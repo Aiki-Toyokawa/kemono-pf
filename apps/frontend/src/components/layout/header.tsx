@@ -9,70 +9,77 @@ export function Header() {
   const logout = useLogout();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-bold">
-          kemono-pf
+    <header className="sticky top-0 z-50 bg-slate-900 shadow-lg">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 h-14">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="text-xl leading-none">🐾</span>
+          <span className="font-bold text-white text-lg leading-none">
+            kemono<span className="text-orange-400">PF</span>
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-2">
+        {/* Center nav */}
+        <nav className="hidden md:flex items-center gap-1">
           <Link
             href="/products"
-            className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
+            className="rounded px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
           >
             作品を探す
           </Link>
+        </nav>
 
+        {/* Right */}
+        <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link
-                href="/upload"
-                className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                アップロード
-              </Link>
-              <Link
-                href="/my/products"
-                className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                マイ作品
-              </Link>
-              <Link
-                href="/my/purchases"
-                className="rounded px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground"
-              >
-                購入履歴
-              </Link>
               {user.role === 'ADMIN' && (
                 <Link
                   href="/admin/products"
-                  className="rounded px-3 py-1.5 text-sm text-orange-600 hover:text-orange-700"
+                  className="hidden sm:block rounded px-2 py-1 text-xs text-orange-400 hover:text-orange-300 hover:bg-slate-800 transition-colors"
                 >
                   管理
                 </Link>
               )}
-              <Link href="/my/settings">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
-                  {user.displayName[0].toUpperCase()}
-                </span>
+              <Link
+                href="/my/purchases"
+                className="hidden sm:block rounded px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                購入履歴
               </Link>
-              <Button variant="ghost" size="sm" onClick={() => logout.mutate()}>
-                ログアウト
-              </Button>
+              <Link
+                href="/my/products"
+                className="hidden sm:block rounded px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                マイ作品
+              </Link>
+              <Link href="/upload">
+                <Button size="sm" className="hidden sm:inline-flex">
+                  出品する
+                </Button>
+              </Link>
+              <Link
+                href="/my/settings"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white hover:bg-orange-400 transition-colors"
+                title={user.displayName}
+              >
+                {user.displayName[0].toUpperCase()}
+              </Link>
             </>
           ) : (
             <>
-              <Link href="/login">
-                <Button variant="outline" size="sm">
-                  ログイン
-                </Button>
+              <Link
+                href="/login"
+                className="rounded px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                ログイン
               </Link>
               <Link href="/register">
-                <Button size="sm">新規登録</Button>
+                <Button size="sm">無料登録</Button>
               </Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
