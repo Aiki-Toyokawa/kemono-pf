@@ -1,4 +1,14 @@
-import { Controller, Get, Put, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -27,5 +37,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   updateMe(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateMe(user.id, dto);
+  }
+
+  @Patch('me/upgrade-to-artist')
+  @UseGuards(JwtAuthGuard)
+  upgradeToArtist(@CurrentUser() user: User) {
+    if (user.role !== Role.USER) {
+      throw new BadRequestException('既に作家登録されています');
+    }
+    return this.usersService.upgradeToArtist(user.id);
   }
 }

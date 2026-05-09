@@ -75,9 +75,9 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          アカウントをお持ちでない方は{' '}
+          アカウントをお持ちでない方は無料で{' '}
           <Link href="/register" className="font-medium text-primary hover:underline">
-            無料登録
+            新規登録
           </Link>
         </p>
       </div>

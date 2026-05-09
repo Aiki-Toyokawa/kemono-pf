@@ -1,4 +1,12 @@
-import { IsEmail, IsString, MinLength, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  MinLength,
+  MaxLength,
+  IsBoolean,
+  IsOptional,
+  Matches,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
@@ -13,4 +21,14 @@ export class RegisterDto {
   @MinLength(1)
   @MaxLength(50)
   displayName: string;
+
+  @IsString()
+  @MinLength(3)
+  @MaxLength(20)
+  @Matches(/^[a-zA-Z0-9_]+$/, { message: 'ユーザーIDは英数字とアンダースコアのみ使用できます' })
+  handle: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isArtist?: boolean;
 }

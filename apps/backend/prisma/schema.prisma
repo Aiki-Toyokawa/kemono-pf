@@ -15,6 +15,9 @@ datasource db {
 
 model User {
   id            String   @id @default(cuid())
+  serialNumber        Int   @unique @default(autoincrement())  // 内部管理用連番 (user000001 形式の元になる)
+  artistSerialNumber  Int?  @unique                           // 作家のみ付与 (artist000001 形式の元になる)
+  handle              String? @unique                         // ユーザーが選んだID (@kemono_taro など)
   email         String   @unique
   passwordHash  String
   role          Role     @default(USER)

@@ -75,7 +75,7 @@ export class AuthController {
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: User) {
-    const { passwordHash: _, ...safeUser } = user;
+    const { passwordHash: _, serialNumber: __, ...safeUser } = user;
     return safeUser;
   }
 

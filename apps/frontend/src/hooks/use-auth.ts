@@ -29,8 +29,13 @@ export function useRegister() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (data: { email: string; password: string; displayName: string }) =>
-      api.post('/auth/register', data),
+    mutationFn: (data: {
+      email: string;
+      password: string;
+      displayName: string;
+      handle: string;
+      isArtist?: boolean;
+    }) => api.post('/auth/register', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
       router.push('/');

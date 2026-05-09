@@ -5,13 +5,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useEffect } from 'react';
 import { useMe, useLogout } from '@/hooks/use-auth';
-import { useUpdateProfile } from '@/hooks/use-users';
+import { useUpdateProfile, useUpgradeToArtist } from '@/hooks/use-users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 const schema = z.object({
   displayName: z.string().min(1, '表示名を入力してください').max(50),
+  handle: z
+    .string()
+    .min(3, 'ユーザーIDは3文字以上で入力してください')
+    .max(20, 'ユーザーIDは20文字以内で入力してください')
+    .regex(/^[a-zA-Z0-9_]+$/, '英数字とアンダースコア(_)のみ使用できます')
+    .optional()
+    .or(z.literal('')),
   bio: z.string().max(500).optional(),
   isNsfwEnabled: z.boolean(),
 });
@@ -20,6 +27,7 @@ type FormData = z.infer<typeof schema>;
 export default function SettingsPage() {
   const { data: me } = useMe();
   const update = useUpdateProfile();
+  const upgrade = useUpgradeToArtist();
   const logout = useLogout();
 
   const {
@@ -31,10 +39,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (me)
-      reset({ displayName: me.displayName, bio: me.bio ?? '', isNsfwEnabled: me.isNsfwEnabled });
+      reset({
+        displayName: me.displayName,
+        handle: me.handle ?? '',
+        bio: me.bio ?? '',
+        isNsfwEnabled: me.isNsfwEnabled,
+      });
   }, [me, reset]);
 
-  const onSubmit = (data: FormData) => update.mutate(data);
+  const onSubmit = (data: FormData) => {
+    const payload = { ...data, handle: data.handle || undefined };
+    update.mutate(payload);
+  };
 
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
@@ -53,6 +69,33 @@ export default function SettingsPage() {
             <Input id="displayName" {...register('displayName')} className="bg-background" />
             {errors.displayName && (
               <p className="text-xs text-red-500">{errors.displayName.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="handle">
+              ユーザーID
+              <span className="ml-1 text-xs font-normal text-muted-foreground">
+                （英数字・_ のみ、3〜20文字）
+              </span>
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                @
+              </span>
+              <Input
+                id="handle"
+                autoComplete="username"
+                placeholder="kemono_taro"
+                className="bg-background pl-7"
+                {...register('handle')}
+              />
+            </div>
+            {errors.handle && <p className="text-xs text-red-500">{errors.handle.message}</p>}
+            {!me?.handle && (
+              <p className="text-xs text-orange-500">
+                ユーザーIDが未設定です。設定するとドロップダウンに表示されます。
+              </p>
             )}
           </div>
 
@@ -100,6 +143,40 @@ export default function SettingsPage() {
           </Button>
         </form>
       </div>
+
+      {/* Artist upgrade — USER ロールのみ表示 */}
+      {me?.role === 'USER' && (
+        <div className="mt-6 rounded-2xl border border-border bg-white p-6 shadow-sm">
+          <h2 className="mb-1 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+            作家登録
+          </h2>
+          <p className="mb-4 mt-3 text-sm text-foreground">
+            作家登録すると、作品の出品・売上管理ができるようになります。
+            <br />
+            追加のメールアドレスやパスワードは不要です。
+          </p>
+          {upgrade.isSuccess ? (
+            <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-700">
+              ✓ 作家登録が完了しました。出品機能が利用できます。
+            </p>
+          ) : (
+            <>
+              {upgrade.error && (
+                <p className="mb-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">
+                  登録に失敗しました。もう一度お試しください。
+                </p>
+              )}
+              <button
+                onClick={() => upgrade.mutate()}
+                disabled={upgrade.isPending}
+                className="rounded-md bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600 disabled:opacity-60"
+              >
+                {upgrade.isPending ? '処理中...' : '🎨 作家として登録する'}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Danger zone / Logout */}
       <div className="mt-6 rounded-2xl border border-red-200 bg-white shadow-sm overflow-hidden">

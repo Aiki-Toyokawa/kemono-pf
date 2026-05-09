@@ -8,6 +8,7 @@ import { useMe } from '@/hooks/use-auth';
 import { usePurchase, useDownloadLink } from '@/hooks/use-orders';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { TEST_PRODUCTS } from '@/lib/test-data';
 
 interface ProductDetail {
   id: string;
@@ -34,6 +35,7 @@ export default function ProductDetailPage() {
     queryKey: ['products', id],
     queryFn: () => api.get(`/products/${id}`).then((r) => r.data),
     enabled: !!id,
+    retry: false,
   });
 
   const downloadMutation = useDownloadLink(product?.purchasedOrderId ?? '');
@@ -45,6 +47,94 @@ export default function ProductDetailPage() {
       </div>
     );
   }
+
+  // テストデータのフォールバック
+  const testProduct = TEST_PRODUCTS.find((p) => String(p.id) === id);
+  if (!product && testProduct) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <nav className="mb-4 flex items-center gap-2 text-xs text-muted-foreground">
+          <Link href="/" className="hover:underline">
+            ホーム
+          </Link>
+          <span>/</span>
+          <Link href="/products" className="hover:underline">
+            作品一覧
+          </Link>
+          <span>/</span>
+          <span className="truncate max-w-[200px]">{testProduct.title}</span>
+        </nav>
+        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+          <span>⚠</span> これはテストデータです
+        </div>
+        <div className="grid gap-8 md:grid-cols-[1fr_300px]">
+          <div>
+            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100">
+              <span className="text-[8rem] select-none">{testProduct.emoji}</span>
+            </div>
+            <div className="mt-6 rounded-xl border border-border bg-white p-5">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                作品概要
+              </h2>
+              <p className="text-sm leading-relaxed text-foreground/80">
+                {testProduct.description}
+              </p>
+            </div>
+            <div className="mt-4 rounded-xl border border-border bg-white p-5">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                作家情報
+              </h2>
+              <Link
+                href={`/artists/${testProduct.artistId}`}
+                className="group flex items-center gap-3"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+                  {testProduct.artist[0]}
+                </div>
+                <div>
+                  <p className="font-medium transition-colors group-hover:text-primary">
+                    {testProduct.artist}
+                  </p>
+                  <p className="text-xs text-muted-foreground">作家ページを見る →</p>
+                </div>
+              </Link>
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
+                  {testProduct.category}
+                </span>
+              </div>
+              <h1 className="text-xl font-bold leading-snug">{testProduct.title}</h1>
+              <Link
+                href={`/artists/${testProduct.artistId}`}
+                className="mt-1 text-sm text-muted-foreground hover:text-primary hover:underline"
+              >
+                by {testProduct.artist}
+              </Link>
+            </div>
+            <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-b from-orange-50 to-amber-50 p-5">
+              <div className="mb-4">
+                <span className="text-3xl font-extrabold text-orange-600">
+                  ¥{testProduct.price.toLocaleString()}
+                </span>
+                <span className="ml-2 text-xs text-muted-foreground">（税込）</span>
+              </div>
+              <button
+                disabled
+                className="w-full cursor-not-allowed rounded-md bg-primary/50 px-4 py-2.5 text-sm font-semibold text-white"
+              >
+                購入する（テストデータ）
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!product)
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3">
@@ -88,7 +178,6 @@ export default function ProductDetailPage() {
       <div className="grid gap-8 md:grid-cols-[1fr_300px]">
         {/* Left: Preview + Description */}
         <div>
-          {/* Thumbnail */}
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-50 via-amber-50 to-orange-100 aspect-[4/3]">
             <div className="absolute inset-0 flex items-center justify-center select-none pointer-events-none">
               <span className="text-9xl opacity-10">🐾</span>
@@ -102,7 +191,6 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* Description */}
           {product.description && (
             <div className="mt-6 rounded-xl border border-border bg-white p-5">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
@@ -114,7 +202,6 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* Author card */}
           <div className="mt-4 rounded-xl border border-border bg-white p-5">
             <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               作家情報
@@ -135,7 +222,6 @@ export default function ProductDetailPage() {
 
         {/* Right: Purchase */}
         <div className="space-y-4">
-          {/* Tags + Title */}
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               {product.isNsfw && (
@@ -161,7 +247,6 @@ export default function ProductDetailPage() {
             </Link>
           </div>
 
-          {/* Price + Buy */}
           <div className="rounded-xl border-2 border-orange-200 bg-gradient-to-b from-orange-50 to-amber-50 p-5">
             <div className="mb-4">
               <span
@@ -202,7 +287,6 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-          {/* File info */}
           {file && (
             <div className="rounded-xl border border-border bg-white p-4">
               <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
